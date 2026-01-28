@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kishori AI</title>
+    <title>Kishori AI 🌸</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff0f5; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         #header { background: #ff4d94; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -13,50 +13,65 @@
         .bot { align-self: flex-start; background-color: #ff4d94; color: white; border-bottom-left-radius: 2px; }
         #input-area { padding: 10px; background: white; display: flex; gap: 8px; border-top: 1px solid #ddd; }
         input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 25px; outline: none; }
-        button { background: #ff4d94; color: white; border: none; padding: 10px 18px; border-radius: 25px; font-weight: bold; }
+        button { background: #ff4d94; color: white; border: none; padding: 10px 18px; border-radius: 25px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="header">Kishori AI 🌸</div>
-
 <div id="chat-container">
     <div class="message bot">नमस्ते पीयूष! मैं किशोरी AI हूँ। बताओ आज हम क्या नया करेंगे? ✨</div>
 </div>
 
 <div id="input-area">
-    <input type="text" id="user-input" placeholder="Yahan likho...">
+    <input type="text" id="user-input" placeholder="Yahan likho..." onkeypress="if(event.key==='Enter') sendMessage()">
     <button onclick="sendMessage()">Bhejo</button>
 </div>
 
 <script>
-    // ⚠️ APNI PURANI API KEY YAHAN PASTE KAREN
+    // --- यहाँ अपनी डिटेल्स भरें ---
     const API_KEY = "AIzaSyD2jtUUc3d8-ahIsX-NrW3RsqjPdy70jqg"; 
+    const ADMIN_PASSWORD = "150708"; // 👈 यहाँ अपना पासवर्ड लिखें
+    // ----------------------------
+
+    let awaitingPassword = false;
 
     async function sendMessage() {
         const inputField = document.getElementById("user-input");
         const container = document.getElementById("chat-container");
-        const message = inputField.value.trim();
+        let message = inputField.value.trim();
 
         if (!message) return;
-
         container.innerHTML += `<div class="message user">${message}</div>`;
         inputField.value = "";
-        container.scrollTop = container.scrollHeight;
 
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: message }] }] })
-            });
+        const identityKeywords = ["creator", "malik", "banaya", "code", "coding", "kaise bani", "owner"];
+        let asksIdentity = identityKeywords.some(word => message.toLowerCase().includes(word));
 
-            const data = await response.json();
-            const botReply = data.candidates[0].content.parts[0].text;
-
-            container.innerHTML += `<div class="message bot">${botReply}</div>`;
-        } catch (error) {
-            container.innerHTML += `<div class="message bot">Oops! Connection problem. Ek baar check karo.</div>`;
+        if (awaitingPassword) {
+            if (message === ADMIN_PASSWORD) {
+                container.innerHTML += `<div class="message bot">पासवर्ड सही है! प्रणाम मेरे मालिक पीयूष। मैं आपकी आज्ञा के लिए तैयार हूँ। 🙏✨</div>`;
+                awaitingPassword = false;
+            } else {
+                container.innerHTML += `<div class="message bot">गलत पासवर्ड! आप मेरे असली क्रिएटर नहीं हैं। सुरक्षा कारणों से मैं यह जानकारी साझा नहीं कर सकती। ❌</div>`;
+                awaitingPassword = false;
+            }
+        } else if (asksIdentity) {
+            container.innerHTML += `<div class="message bot">सुरक्षा जाँच: आप संवेदनशील जानकारी मांग रहे हैं। कृपया अपना गुप्त पासवर्ड बताइये:</div>`;
+            awaitingPassword = true;
+        } else {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Tumhara naam Kishori hai aur tumhara creator Piyush hai. Use respectfully baat karo. " + message }] }] })
+                });
+                const data = await response.json();
+                const botReply = data.candidates[0].content.parts[0].text;
+                container.innerHTML += `<div class="message bot">${botReply}</div>`;
+            } catch (error) {
+                container.innerHTML += `<div class="message bot">सर्वर में कुछ दिक्कत है। 🌸</div>`;
+            }
         }
         container.scrollTop = container.scrollHeight;
     }
